@@ -66,6 +66,9 @@ jobs:
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://myuser:mypassword@localhost:5432/testdb?schema=public
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+          POSTGRES_DB: testdb
         run: npm run test
 
       # (Optionnel) Étape 8: Nettoyer la base de données après les tests

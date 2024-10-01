@@ -17,14 +17,21 @@ import { ConfigModule } from '@nestjs/config';
     }),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => ({
-        store: await redisStore({
-          socket: {
-            host: 'redis',
-            port: 6379,
-          },
-        }),
-      }),
+      useFactory: async () => {
+        if (process.env.NODE_ENV === 'test') {
+          return {
+            store: 'memory',
+          };
+        }
+        return {
+          store: await redisStore({
+            socket: {
+              host: 'redis',
+              port: 6379,
+            },
+          }),
+        };
+      },
     }),
     AuthModule,
     UsersModule,
