@@ -69,6 +69,8 @@ jobs:
           POSTGRES_USER: myuser
           POSTGRES_PASSWORD: mypassword
           POSTGRES_DB: testdb
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
         run: npm run test
 
       # (Optionnel) Étape 8: Nettoyer la base de données après les tests
