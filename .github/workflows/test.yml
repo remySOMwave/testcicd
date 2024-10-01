@@ -1,3 +1,5 @@
+name: CI
+
 on:
   push:
     branches:
@@ -50,7 +52,8 @@ jobs:
 
       # Étape 5: Créer la base de données pour les tests
       - name: Create test database
-        run: docker exec -i postgres psql -U myuser -c "CREATE DATABASE testdb;"
+        run: |
+          PGPASSWORD=mypassword psql -h localhost -U myuser -d mydatabase -c "CREATE DATABASE testdb;"
 
       # Étape 6: Appliquer les migrations Prisma
       - name: Run Prisma migrations
@@ -67,4 +70,5 @@ jobs:
 
       # (Optionnel) Étape 8: Nettoyer la base de données après les tests
       - name: Drop test database
-        run: docker exec -i postgres psql -U myuser -c "DROP DATABASE IF EXISTS testdb;"
+        run: |
+          PGPASSWORD=mypassword psql -h localhost -U myuser -d mydatabase -c "DROP DATABASE IF EXISTS testdb;"
