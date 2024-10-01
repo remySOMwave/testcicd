@@ -18,6 +18,7 @@ export class AppService {
     status: string;
     postgres: string;
     cache: string;
+    env: object;
   }> {
     let dbStatus = 'ok';
     try {
@@ -33,6 +34,7 @@ export class AppService {
       status: 'Application running',
       postgres: dbStatus,
       cache: cacheStatus || 'error',
+      env: process.env,
     };
   }
 }

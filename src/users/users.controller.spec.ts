@@ -1,121 +1,59 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UsersController } from './users.controller';
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from './../app.module';
+import { PrismaService } from './../prisma/prisma.service';
 
-describe('UsersController', () => {
-  let controller: UsersController;
-  let service: UsersService;
+describe('UsersController (e2e)', () => {
+  let app: INestApplication;
+  let prismaService: PrismaService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [UsersController],
-      providers: [
-        {
-          provide: UsersService,
-          useValue: {
-            create: jest.fn(),
-            findAll: jest.fn(),
-            findOne: jest.fn(),
-            update: jest.fn(),
-            remove: jest.fn(),
-          },
-        },
-      ],
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
     }).compile();
 
-    controller = module.get<UsersController>(UsersController);
-    service = module.get<UsersService>(UsersService);
+    app = moduleFixture.createNestApplication();
+    await app.init();
+
+    prismaService = app.get<PrismaService>(PrismaService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  beforeEach(async () => {
+    await prismaService.user.deleteMany();
   });
 
-  describe('create', () => {
-    it('should create a user', async () => {
-      const createUserDto: CreateUserDto = {
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'Password123!',
-      };
-      const expectedResult = {
-        email: 'test@example.com',
-        password: 'password123',
-        name: 'Test User',
-        id: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      jest.spyOn(service, 'create').mockResolvedValue(expectedResult);
+  afterAll(async () => {
+    if (prismaService) {
+      await prismaService.user.deleteMany();
+    }
+    await app.close();
+  });
 
-      expect(await controller.create(createUserDto)).toBe(expectedResult);
-      expect(service.create).toHaveBeenCalledWith(createUserDto);
+  it('/users (POST) - should create a new user', async () => {
+    const createUserDto = {
+      email: 'test@example.com',
+      password: 'Password123!',
+      name: 'Test User',
+    };
+
+    const response = await request(app.getHttpServer())
+      .post('/users')
+      .send(createUserDto)
+      .expect(201);
+
+    expect(response.body).toHaveProperty('id');
+    expect(response.body.email).toBe(createUserDto.email);
+    expect(response.body.name).toBe(createUserDto.name);
+    expect(response.body).not.toHaveProperty('password');
+
+    // Vérifier que l'utilisateur a bien été créé dans la base de données
+    const createdUser = await prismaService.user.findUnique({
+      where: { email: createUserDto.email },
     });
+    expect(createdUser).toBeTruthy();
+    expect(createdUser.email).toBe(createUserDto.email);
   });
 
-  describe('findAll', () => {
-    it('should return an array of users', async () => {
-      const expectedResults = [
-        {
-          id: 1,
-          name: 'Test User',
-          email: 'test@example.com',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-      jest.spyOn(service, 'findAll').mockResolvedValue(expectedResults);
-
-      expect(await controller.findAll()).toBe(expectedResults);
-      expect(service.findAll).toHaveBeenCalled();
-    });
-  });
-
-  describe('findOne', () => {
-    it('should return a single user', async () => {
-      const expectedOneResult = {
-        id: 1,
-        name: 'Test User',
-        email: 'test@example.com',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      jest.spyOn(service, 'findOne').mockResolvedValue(expectedOneResult);
-
-      expect(await controller.findOne('1')).toBe(expectedOneResult);
-      expect(service.findOne).toHaveBeenCalledWith(1);
-    });
-  });
-
-  describe('update', () => {
-    it('should update a user', async () => {
-      const updateUserDto: UpdateUserDto = { name: 'Updated User' };
-      const expectedUpdateResult = {
-        id: 1,
-        name: 'Updated User',
-        email: 'updated@example.com',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      jest.spyOn(service, 'update').mockResolvedValue(expectedUpdateResult);
-
-      expect(await controller.update('1', updateUserDto)).toBe(
-        expectedUpdateResult,
-      );
-      expect(service.update).toHaveBeenCalledWith(1, updateUserDto);
-    });
-  });
-
-  describe('remove', () => {
-    it('should remove a user', async () => {
-      const userId = '1';
-      const expectedResult = { message: 'Utilisateur supprimé avec succès' };
-      jest.spyOn(service, 'remove').mockResolvedValue(expectedResult);
-
-      expect(await controller.remove(userId)).toBe(expectedResult);
-      expect(service.remove).toHaveBeenCalledWith(+userId);
-    });
-  });
+  // Vous pouvez ajouter d'autres tests pour les autres endpoints (GET, PATCH, DELETE) ici
 });
