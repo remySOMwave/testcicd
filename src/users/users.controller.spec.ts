@@ -30,6 +30,13 @@ describe('UsersController (e2e)', () => {
     await app.close();
   });
 
+  it('should log environment variables', () => {
+    console.log('DATABASE_URL:', process.env.DATABASE_URL);
+    console.log('POSTGRES_USER:', process.env.POSTGRES_USER);
+    console.log('POSTGRES_PASSWORD:', process.env.POSTGRES_PASSWORD);
+    console.log('POSTGRES_DB:', process.env.POSTGRES_DB);
+  });
+
   it('/users (POST) - should create a new user', async () => {
     const createUserDto = {
       email: 'test@example.com',
@@ -49,7 +56,7 @@ describe('UsersController (e2e)', () => {
 
     // Vérifier que l'utilisateur a bien été créé dans la base de données
     const createdUser = await prismaService.user.findUnique({
-      where: { email: 'remy@gmail.com' },
+      where: { email: createUserDto.email },
     });
     expect(createdUser).toBeTruthy();
     expect(createdUser.email).toBe(createUserDto.email);
