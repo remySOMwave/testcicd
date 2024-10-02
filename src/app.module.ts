@@ -7,21 +7,16 @@ import { PrismaService } from './prisma/prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
-    }),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => ({
         store: await redisStore({
           socket: {
-            host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+            host: 'redis',
+            port: 6379,
           },
         }),
       }),

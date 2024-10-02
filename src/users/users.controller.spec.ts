@@ -49,7 +49,7 @@ describe('UsersController (e2e)', () => {
 
     // Vérifier que l'utilisateur a bien été créé dans la base de données
     const createdUser = await prismaService.user.findUnique({
-      where: { email: createUserDto.email },
+      where: { email: 'remy@gmail.com' },
     });
     expect(createdUser).toBeTruthy();
     expect(createdUser.email).toBe(createUserDto.email);
