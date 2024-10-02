@@ -76,7 +76,7 @@ jobs:
           POSTGRES_DB: testdb
           REDIS_HOST: localhost
           REDIS_PORT: 6379
-        run: npm run test_workflow
+        run: npm run test
 
       # (Optionnel) Étape 8: Nettoyer la base de données après les tests
       - name: Drop test database
